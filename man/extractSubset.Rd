@@ -2,12 +2,12 @@
 % Please edit documentation in R/MultiWaveAnalisysParallel.R
 \name{extractSubset}
 \alias{extractSubset}
-\title{Extract observations from a WaveAnalysis}
+\title{Extract observations from a MultiWaveAnalysis}
 \usage{
 extractSubset(MWA, indices)
 }
 \arguments{
-\item{MWA}{WaveAnalysis from which the desired observations will be extracted}
+\item{MWA}{MultiWaveAnalysis from which the desired observations will be extracted}
 
 \item{indices}{Indices that will indicate which observations will be
 extracted}
@@ -15,12 +15,12 @@ extracted}
 \value{
 A list with two elements:
 \itemize{
-\item MWA: The WaveAnalysis provided minus the extracted observations.
-\item MWAExtracted: A new WaveAnalysis with the extracted observations
+\item MWA: The MultiWaveAnalysis provided minus the extracted observations.
+\item MWAExtracted: A new MultiWaveAnalysis with the extracted observations
 }
 }
 \description{
-This function permits to extract certain observations from a WaveAnalysis
+This function permits to extract certain observations from a MultiWaveAnalysis
 }
 \examples{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))

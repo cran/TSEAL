@@ -6,16 +6,16 @@
 \usage{
 StepDiscrimV(
   MWA,
-  grps,
+  labels,
   VStep,
   features = c("Var", "Cor", "IQR", "PE", "DM"),
   nCores = 0
 )
 }
 \arguments{
-\item{MWA}{WaveAnalysis object obtained with MultiWaveAnalysis function}
+\item{MWA}{MultiWaveAnalysis object obtained with MultiWaveAnalysis function}
 
-\item{grps}{Labeled vector that classify the observations.}
+\item{labels}{Labeled vector that classify the observations.}
 
 \item{VStep}{Determine the minimum value of V to continue adding new
 variables. Ex if an determinate step the maximum V is 0.2 but VStep is
@@ -30,7 +30,7 @@ function, by default it uses all but one of the system cores. Must be
 a positive integer, where 0 corresponds to the default behavior}
 }
 \value{
-A WaveAnalysis object with the most discriminant variables.
+A MultiWaveAnalysis object with the most discriminant variables.
 This Object contains:
 * Features: A list with the initial computed features
 * StepSelection: The most discriminant variables selected by this

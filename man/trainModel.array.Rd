@@ -6,7 +6,7 @@
 \usage{
 \method{trainModel}{array}(
   data,
-  grps,
+  labels,
   f,
   method,
   maxvars,
@@ -20,7 +20,7 @@
 \arguments{
 \item{data}{Sample from the population (dim x length x cases)}
 
-\item{grps}{Labeled vector that classify the observations}
+\item{labels}{Labeled vector that classify the observations}
 
 \item{f}{Selected filter for the MODWT (to see the available filters use the
 function availableFilters)}
@@ -67,12 +67,12 @@ the selected discriminant model is trained with the subset obtained.
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 # The dataset has the first 5 elements of class 1 and the last 5 of class 2.
-grps <- c(rep(1, 5), rep(2, 5))
-model <- trainModel(ECGExample, grps, "d6", "linear",
+labels <- c(rep(1, 5), rep(2, 5))
+model <- trainModel(ECGExample, labels, "d6", "linear",
   maxvars = 5, features = c("Var")
 )
 # or using VStep
-modelV <- trainModel(ECGExample, grps, "d6", "linear",
+modelV <- trainModel(ECGExample, labels, "d6", "linear",
     VStep = 14.5, features = c("Var")
 )
 }

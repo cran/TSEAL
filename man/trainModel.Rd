@@ -8,7 +8,7 @@ trainModel(data, ...)
 }
 \arguments{
 \item{data}{Starting data to generate a discriminator (linear or quadratic).
-This starting data can be either the raw data, or a WaveAnalysis
+This starting data can be either the raw data, or a MultiWaveAnalysis
 object generated earlier.}
 
 \item{...}{Additional arguments}
@@ -22,6 +22,6 @@ This function allows training of a discriminant model using different inputs
 \seealso{
 \itemize{
 \item \code{\link{trainModel.array}}
-\item \code{\link{trainModel.WaveAnalysis}}
+\item \code{\link{trainModel.MultiWaveAnalysis}}
 }
 }

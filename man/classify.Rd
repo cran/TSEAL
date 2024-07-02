@@ -7,8 +7,8 @@
 classify(data, ...)
 }
 \arguments{
-\item{data}{The data to be classified. This  data can be either the raw data, or a WaveAnalysis
-object generated earlier.}
+\item{data}{The data to be classified. This  data can be either the raw data
+, or a MultiWaveAnalysis object generated earlier.}
 
 \item{...}{Additional arguments}
 }
@@ -24,6 +24,6 @@ function). T
 \itemize{
 \item \code{\link{trainModel}}
 \item \code{\link{classify.array}}
-\item \code{\link{classify.WaveAnalysis}}
+\item \code{\link{classify.MultiWaveAnalysis}}
 }
 }

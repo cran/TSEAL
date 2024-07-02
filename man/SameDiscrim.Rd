@@ -7,14 +7,14 @@
 SameDiscrim(MWA, MWADiscrim)
 }
 \arguments{
-\item{MWA}{WaveAnalysis object on which variables are to be selected.}
+\item{MWA}{MultiWaveAnalysis object on which variables are to be selected.}
 
-\item{MWADiscrim}{WaveAnalysis object on which certain variables have been
+\item{MWADiscrim}{MultiWaveAnalysis object on which certain variables have been
 previously selected, using \code{\link{StepDiscrim}} or
 \code{\link{StepDiscrimV}}}
 }
 \value{
-An object of class WaveAnalysis with the same variables selected as in the
+An object of class MultiWaveAnalysis with the same variables selected as in the
 MWADiscrim object.
 }
 \description{

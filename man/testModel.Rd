@@ -4,15 +4,15 @@
 \alias{testModel}
 \title{Computes a classification from a pretrained discriminant}
 \usage{
-testModel(model, test, grps, returnClassification = FALSE, ...)
+testModel(model, test, labels, returnClassification = FALSE, ...)
 }
 \arguments{
 \item{model}{Trained linear discriminant.
 see \code{\link{trainModel}}}
 
-\item{test}{WaveAnalysis class object to be used as test set.}
+\item{test}{MultiWaveAnalysis class object to be used as test set.}
 
-\item{grps}{Vector that determines the class to which each of the
+\item{labels}{Vector that determines the class to which each of the
 observations provided in the test set belongs.}
 
 \item{returnClassification}{Allows to select if the raw result classification
@@ -39,13 +39,13 @@ classification result.
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 # The dataset has the first 5 elements of class 1
 # and the last 5 of class 2.
-grps <- c(rep(1, 5), rep(2, 5))
-MWA <- generateStepDiscrim(ECGExample, grps, "haar", maxvars = 5, features = c("var"))
+labels <- c(rep(1, 5), rep(2, 5))
+MWA <- generateStepDiscrim(ECGExample, labels, "haar", maxvars = 5, features = c("var"))
 aux <- extractSubset(MWA, c(1, 2, 9, 10))
 MWATest <- aux[[1]]
 MWATrain <- aux[[2]]
-ldaDiscriminant <- trainModel(MWATrain, grps[3:8], "linear")
-CM <- testModel(ldaDiscriminant, MWATest, grps[c(1, 2, 9, 10)])
+ldaDiscriminant <- trainModel(MWATrain, labels[3:8], "linear")
+CM <- testModel(ldaDiscriminant, MWATest, labels[c(1, 2, 9, 10)])
 }
 
 }

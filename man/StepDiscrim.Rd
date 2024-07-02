@@ -6,16 +6,16 @@
 \usage{
 StepDiscrim(
   MWA,
-  grps,
+  labels,
   maxvars,
   features = c("Var", "Cor", "IQR", "PE", "DM"),
   nCores = 0
 )
 }
 \arguments{
-\item{MWA}{WaveAnalysis object obtained with MultiWaveAnalysis function}
+\item{MWA}{MultiWaveAnalysis object obtained with MultiWaveAnalysis function}
 
-\item{grps}{Labeled vector that classify the observations.}
+\item{labels}{Labeled vector that classify the observations.}
 
 \item{maxvars}{The number of desired values. Must be a positive integer}
 
@@ -28,7 +28,7 @@ function, by default it uses all but one of the system cores. Must be
 a positive integer, where 0 corresponds to the default behavior}
 }
 \value{
-A WaveAnalysis object with the maxvars most discriminant variables.
+A MultiWaveAnalysis object with the maxvars most discriminant variables.
 This object contains:
 * Features: A list with the initial computed features
 * StepSelection: The maxvars most discriminant variables

@@ -7,7 +7,7 @@ data.}
 \usage{
 \method{LOOCV}{array}(
   data,
-  grps,
+  labels,
   f,
   method,
   maxvars,
@@ -22,7 +22,7 @@ data.}
 \arguments{
 \item{data}{Sample from the population (dim x length x cases)}
 
-\item{grps}{Labeled vector that classify the observations}
+\item{labels}{Labeled vector that classify the observations}
 
 \item{f}{Selected filter for the MODWT (to see the available filters use the
 function \code{\link{availableFilters}}}
@@ -69,7 +69,7 @@ classification result.
 }
 \description{
 It generates and validates a discriminant model starting from the data.
-First, a WaveAnalysis object is obtained according to the selected
+First, a MultiWaveAnalysis object is obtained according to the selected
 characteristics, filter and levels. Then, the most important features are
 selected using a stepwise discriminant that allows to select a maximum number
 of variables (maxvars) or a minimum enhancement step (VStep). Finally, the
@@ -79,13 +79,13 @@ Leave-One-Out Cross Validation (LOOCV).
 \examples{
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-grps <- c(rep(1, 5), rep(2, 5))
-CM <- LOOCV(ECGExample, grps, "haar", "linear",
+labels <- c(rep(1, 5), rep(2, 5))
+CM <- LOOCV(ECGExample, labels, "haar", "linear",
   maxvars = 5,
   features = c("Var"), returnClassification = FALSE
 )
 # or with VStep
-CMV <- LOOCV(ECGExample, grps, "haar", "linear",
+CMV <- LOOCV(ECGExample, labels, "haar", "linear",
  VStep = 5,
  features = c("Var", "Cor"), returnClassification = FALSE
 )
@@ -94,7 +94,7 @@ CMV <- LOOCV(ECGExample, grps, "haar", "linear",
 \seealso{
 \itemize{
 \item \code{\link{LOOCV}}
-\item \code{\link{LOOCV.WaveAnalysis}}
+\item \code{\link{LOOCV.MultiWaveAnalysis}}
 \item \code{\link{availableFilters}}
 \item \code{\link{availableFeatures}}
 }

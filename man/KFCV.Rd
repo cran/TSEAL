@@ -8,7 +8,7 @@ KFCV(data, ...)
 }
 \arguments{
 \item{data}{Starting data to generate the validation. It can be either the
-raw data, or a previously generated WaveAnalysis object.}
+raw data, or a previously generated MultiWaveAnalysis object.}
 
 \item{...}{Additional arguments}
 }
@@ -22,6 +22,6 @@ with different types of input parameters.
 \seealso{
 \itemize{
 \item \code{\link{KFCV.array}}
-\item \code{\link{KFCV.WaveAnalysis}}
+\item \code{\link{KFCV.MultiWaveAnalysis}}
 }
 }

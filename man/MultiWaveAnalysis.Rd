@@ -5,7 +5,7 @@
 \title{Generate a MultiWave analysis}
 \usage{
 MultiWaveAnalysis(
-  XSeries,
+  series,
   f,
   lev = 0,
   features = c("Var", "Cor", "IQR", "PE", "DM"),
@@ -13,7 +13,7 @@ MultiWaveAnalysis(
 )
 }
 \arguments{
-\item{XSeries}{Sample from the population (array of three dimensions
+\item{series}{Sample from the population (array of three dimensions
 [dim, length, cases]}
 
 \item{f}{Selected wavelet filter for the analysis. To see the available
@@ -33,14 +33,14 @@ a positive integer, where 0 corresponds to the default behavior}
 }
 \value{
 A multivariate analysis with the characteristics indicated in the
-parameter features. This is an object of class WaveAnalysis with
+parameter features. This is an object of class MultiWaveAnalysis with
 contains
 * Features: A list with the computed features
 * StepSelection: A selection with the most discriminant features
 \code{\link{StepDiscrim}}
 * Observations: Number of total observations
 * NLevels: Number of levels selected for the decomposition process
-* filter: Filter used in the decomposition process
+* Filter: Filter used in the decomposition process
 }
 \description{
 Generates a multivariate analysis by calculating a series of features from

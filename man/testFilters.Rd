@@ -5,8 +5,8 @@
 \title{testFilters}
 \usage{
 testFilters(
-  XSeries,
-  grps,
+  series,
+  labels,
   maxvars,
   filters = c("haar", "d4", "d6", "d8", "la8"),
   features = c("Var", "Cor", "IQR", "PE", "DM"),
@@ -14,9 +14,9 @@ testFilters(
 )
 }
 \arguments{
-\item{XSeries}{Samples from the population (dim x length x cases)}
+\item{series}{Samples from the population (dim x length x cases)}
 
-\item{grps}{Labeled vector that classify the observations.}
+\item{labels}{Labeled vector that classify the observations.}
 
 \item{maxvars}{maximum number of variables included by the StepDiscrim
 algorithm. Must be grater than 0 and, in normal cases, lesser than 100}
@@ -57,8 +57,8 @@ quadratic discriminant.
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 # The dataset has the first 5 elements of class 1
 # and the last 5 of class 2.
-grps <- c(rep(1, 5), rep(2, 5))
-result <- testFilters(ECGExample, grps, features=c("var","cor"),
+labels <- c(rep(1, 5), rep(2, 5))
+result <- testFilters(ECGExample, labels, features=c("var","cor"),
           filters= c("haar","d4"), maxvars = 3)
 }
 
