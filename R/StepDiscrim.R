@@ -80,26 +80,12 @@ geTSEALectedFeatures <- function(MWA, features) {
 }
 
 GenerateMWADiscrim <- function(MWA, incl, idx) {
-    MWAAux <- list(
-        Features = list(
-            Var = NA,
-            Cor = NA,
-            IQR = NA,
-            DM = NA,
-            PE = NA
-        ),
-        StepSelection = list(
-            Var = NA,
-            Cor = NA,
-            IQR = NA,
-            DM = NA,
-            PE = NA
-        ),
-        Observations = MWA$Observations,
+    MWAAux <- WaveAnalysis(
+        observations = MWA$Observations,
+        signals = MWA$Signals,
         NLevels = MWA$NLevels,
-        Filter = MWA$Filter
+        filter = MWA$Filter
     )
-    attr(MWAAux, "class") <- "MultiWaveAnalysis"
     acc <- 1
     for (id in idx) {
         size <- dim(MWA$Features[[id]])[1]
@@ -112,8 +98,16 @@ GenerateMWADiscrim <- function(MWA, incl, idx) {
 
         if (length(index) > 0) {
             MWAAux$StepSelection[[id]] <- index
+            MWAAux$SignalSelection[[id]] <- sapply(index, function(x) {
+                varName <- tolower(names(MWAAux$Features)[id])
+                funct <- signalFromVariable[[varName]]
+                return (funct(x, MWAAux$NLevels, MWAAux$Signals))
+            })
+
             if (length(index) == 1) {
-                MWAAux$Features[[id]] <- t(as.matrix(MWA$Features[[id]][index, ]))
+                MWAAux$Features[[id]] <- t(
+                    as.matrix(MWA$Features[[id]][index, ]))
+
             } else {
                 MWAAux$Features[[id]] <- MWA$Features[[id]][index, ]
             }
@@ -138,7 +132,8 @@ StepDiscrimRaw_ <-
         }
 
         if (length(labels) != MWA$Observations) {
-            stop("The \"labels\" length mismatches with the observations of \"MWA\"")
+            stop("The \"labels\" length mismatches with the observations of
+                 \"MWA\"")
         }
 
         maxvars <- checkmate::asCount(maxvars)
@@ -152,9 +147,67 @@ StepDiscrimRaw_ <-
             nCores <- parallelly::availableCores()
         }
 
-        incl <- StepDiscrim_(t(Tr), labels, maxvars, nCores)[[1]]
+        if (nCores < 0) {
+            incl <- StepDiscrimUniCore_(t(Tr), labels, maxvars)[[1]]
+        } else {
+            incl <- StepDiscrim_(t(Tr), labels, maxvars, nCores)[[1]]
+        }
+
         return(list(Tr, incl))
     }
+
+StepDiscrimUniCore_ <- function(X, labels, maxvars) {
+    # maxVars to maximum numbers of vars available
+    maxvars <- min(maxvars, dim(X)[2])
+    n <- dim(X)[1]
+    p <- dim(X)[2]
+    r <- length(labels)
+
+    if (r == 1) {
+        labels <- t(labels)
+    }
+
+    vars_incl <- matrix(0, 1, p)
+    Vcum <- matrix(0, 1, maxvars)
+    Vpcum <- matrix(0, 1, maxvars)
+
+    for (step in seq_len(maxvars)) {
+        vi <- which(vars_incl > 0)
+        vni <- which(vars_incl == 0)
+        nvni <- length(vni)
+
+
+        V <- vector("numeric", nvni)
+        Vp <- vector("numeric", nvni)
+
+        for (v in seq_len(nvni)) {
+            aux <- Lawley(X[, c(vi, vni[v])], labels)
+            V[v] <- aux[[1]]
+            Vp[v] <- aux[[2]]
+        }
+
+
+        if (is.finite(sum(V))) {
+            i <- which.max(Vp)
+            Vpmax <- Vp[i]
+            vars_incl[vni[i]] <- step
+            Vpcum[step] <- Vpmax
+            Vcum[step] <- V[i]
+        } else {
+            break
+        }
+    }
+
+    aux <- sort(vars_incl, index.return = TRUE)
+    y <- aux[[1]]
+    incl <- aux[[2]]
+    i <- which(y > 0)
+    incl <- incl[i]
+    len_inc <- length(incl)
+    Vcum <- Vcum[seq_len(len_inc)]
+    Vpcum <- Vpcum[seq_len(len_inc)]
+    return(list(incl, Vcum, Vpcum))
+}
 
 StepDiscrim_ <- function(X, labels, maxvars, nCores) {
     # maxVars to maximum numbers of vars available
@@ -188,8 +241,10 @@ StepDiscrim_ <- function(X, labels, maxvars, nCores) {
             # Vp <- vector("numeric",nvni)
             mgrmakevar(c, "Vs", nvni, 1)
             mgrmakevar(c, "Vps", nvni, 1)
-            clusterExport(c, c("vi", "vni", "labels", "nvni"), envir = environment())
-            clusterExport(c, c("Lawley", "Desing"), envir = loadNamespace("TSEAL"))
+            clusterExport(c, c("vi", "vni", "labels", "nvni"),
+                          envir = environment())
+            clusterExport(c, c("Lawley", "Desing"),
+                          envir = loadNamespace("TSEAL"))
 
             clusterEvalQ(c, {
                 ids <- getidxs(nvni)
@@ -215,8 +270,7 @@ StepDiscrim_ <- function(X, labels, maxvars, nCores) {
                 break
             }
         }
-    },
-    finally = stoprdsm(c))
+    }, finally = stoprdsm(c))
 
     aux <- sort(vars_incl, index.return = TRUE)
     y <- aux[[1]]
@@ -257,7 +311,8 @@ StepDiscrimV_ <- function(X, labels, VStep, nCores) {
 
             mgrmakevar(c, "Vs", nvni, 1)
             mgrmakevar(c, "Vps", nvni, 1)
-            clusterExport(c, c("vi", "vni", "labels", "nvni"), envir = environment())
+            clusterExport(c, c("vi", "vni", "labels", "nvni"),
+                          envir = environment())
             clusterExport(c, c("Lawley"), envir = loadNamespace("TSEAL"))
 
             clusterEvalQ(c, {
@@ -285,8 +340,7 @@ StepDiscrimV_ <- function(X, labels, VStep, nCores) {
                 break
             }
         }
-    },
-    finally = stoprdsm(c))
+    }, finally = stoprdsm(c))
 
     return(list(vars_incl, Vcum, Vpcum))
 }
@@ -310,8 +364,9 @@ StepDiscrimV_ <- function(X, labels, VStep, nCores) {
 #'        function, by default it uses all but one of the system cores. Must be
 #'        a positive integer, where 0 corresponds to the default behavior
 #'
-#' @return A MultiWaveAnalysis object with the maxvars most discriminant variables.
-#'          This object contains:
+#' @return A MultiWaveAnalysis object with the maxvars most discriminant
+#'           variables.
+#'           This object contains:
 #'          * Features: A list with the initial computed features
 #'          * StepSelection: The maxvars most discriminant variables
 #'          * Observations: Number of total observations
@@ -323,7 +378,7 @@ StepDiscrimV_ <- function(X, labels, VStep, nCores) {
 #' load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 #' MWA <- MultiWaveAnalysis(ECGExample, "haar", features = c("var"))
 #' MWADiscrim <- StepDiscrim(
-#'   MWA, c(rep(1, 5), rep(2, 5)), 5,
+#'   MWA, c(rep(1, 8), rep(2, 8)), 5,
 #'   c("Var")
 #' )
 #'}
@@ -342,13 +397,14 @@ StepDiscrim <- function(MWA,
 
     if (length(features) == 0) {
         stop(
-            "At least one feature must be provided. To see the available filters
-         use the availableFeatures()"
+            "At least one feature must be provided. To see the available
+            features use the availableFeatures()"
         )
     }
 
     if (length(labels) != MWA$Observations) {
-        stop("The \"labels\" length mismatches with the observations of \"MWA\"")
+        stop("The \"labels\" length mismatches with the observations of
+             \"MWA\"")
     }
 
     maxvars <- checkmate::asCount(maxvars)
@@ -405,7 +461,7 @@ StepDiscrim <- function(MWA,
 #' load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 #' MWA <- MultiWaveAnalysis(ECGExample, "haar", features = c("var"))
 #' MWADiscrim <- StepDiscrimV(
-#'   MWA, c(rep(1, 5), rep(2, 5)), 0.1,
+#'   MWA, c(rep(1, 8), rep(2, 8)), 0.1,
 #'   c("Var")
 #' )
 #' }
@@ -423,7 +479,8 @@ StepDiscrimV <- function(MWA,
     checkmate::anyMissing(c(MWA, labels, VStep))
 
     if (VStep <= 0) {
-        stop("The argument \"VStep\" must be provided and must be grater than 0")
+        stop("The argument \"VStep\" must be provided and must be grater than
+             0")
     }
 
     if (length(features) == 0) {
@@ -434,7 +491,8 @@ StepDiscrimV <- function(MWA,
     }
 
     if (length(labels) != MWA$Observations) {
-        stop("The \"labels\" length mismatches with the observations of \"MWA\"")
+        stop("The \"labels\" length mismatches with the observations of
+             \"MWA\"")
     }
 
     if (!is.numeric(VStep) || length(VStep) != 1 || VStep <= 0) {
@@ -465,22 +523,22 @@ StepDiscrimV <- function(MWA,
 #' the parameters of the MWA and of the selection are the same).
 #'
 #' @param MWA MultiWaveAnalysis object on which variables are to be selected.
-#' @param MWADiscrim MultiWaveAnalysis object on which certain variables have been
-#'  previously selected, using \code{\link{StepDiscrim}} or
-#'   \code{\link{StepDiscrimV}}
+#' @param MWADiscrim MultiWaveAnalysis object on which certain variables have
+#'  been previously selected, using \code{\link{StepDiscrim}} or
+#'  \code{\link{StepDiscrimV}}
 #'
-#' @return An object of class MultiWaveAnalysis with the same variables selected as in the
-#'         MWADiscrim object.
+#' @return An object of class MultiWaveAnalysis with the same variables selected
+#'         as in the MWADiscrim object.
 #' @export
 #'
 #' @examples
 #' \donttest{
 #' load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 #' # We simulate that the second series has been obtained after
-#' Series1 <- ECGExample[, , 1:9]
-#' Series2 <- ECGExample[, , 10, drop = FALSE]
+#' Series1 <- ECGExample[, , 1:15]
+#' Series2 <- ECGExample[, , 16, drop = FALSE]
 #' MWA <- MultiWaveAnalysis(Series1, "haar", features = c("var"))
-#' MWADiscrim <- StepDiscrim(MWA, c(rep(1, 5), rep(2, 4)), 5,
+#' MWADiscrim <- StepDiscrim(MWA, c(rep(1, 8), rep(2, 7)), 5,
 #'   features = c("var")
 #' )
 #'
@@ -494,7 +552,6 @@ StepDiscrimV <- function(MWA,
 #' * \code{\link{StepDiscrim}}
 #' * \code{\link{StepDiscrimV}}
 SameDiscrim <- function(MWA, MWADiscrim) {
-
     checkmate::anyMissing(c(MWA, MWADiscrim))
 
     if (MWA$NLevels != MWADiscrim$NLevels) {
@@ -503,39 +560,30 @@ SameDiscrim <- function(MWA, MWADiscrim) {
 
     if (all(is.na(MWADiscrim$StepSelection))) {
         stop(
-            "The \"MWADiscrimination\" provided has no variables selected, probably
-          because they have not been selected. See MWADiscrim function for more
-         information."
+            "The \"MWADiscrimination\" provided has no variables selected,
+            probably  because they have not been selected. See MWADiscrim
+            function for more information."
         )
     }
 
-    MWAAux <- list(
-        Features = list(
-            Var = NA,
-            Cor = NA,
-            IQR = NA,
-            DM = NA,
-            PE = NA
-        ),
-        StepSelection = list(
-            Var = NA,
-            Cor = NA,
-            IQR = NA,
-            DM = NA,
-            PE = NA
-        ),
-        Observations = MWA$Observations,
+    SignalSelection <- MWADiscrim$SignalSelection
+    MWAAux <- WaveAnalysis(
+        observations = MWA$Observations,
+        signals = MWA$Signals,
         NLevels = MWA$NLevels,
-        Filter = MWA$Filter
+        filter = MWA$Filter,
+        siVar = SignalSelection[["Var"]],
+        siCor = SignalSelection[["Cor"]],
+        siIQR = SignalSelection[["IQR"]],
+        siDM = SignalSelection[["DM"]],
+        siPE = SignalSelection[["PE"]]
     )
-    attr(MWAAux, "class") <- "MultiWaveAnalysis"
 
     for (feature in names(MWA$Features)) {
         if (!all(is.na(MWADiscrim$StepSelection[[feature]]))) {
             selection <- MWADiscrim$StepSelection[[feature]]
             MWAAux$Features[[feature]] <-
-                MWA$Features[[feature]][selection, ,
-                                        drop = FALSE]
+                MWA$Features[[feature]][selection, , drop = FALSE]
             MWAAux$StepSelection[[feature]] <- selection
         }
     }

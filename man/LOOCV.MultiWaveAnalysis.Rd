@@ -7,8 +7,8 @@
 \method{LOOCV}{MultiWaveAnalysis}(data, labels, method, returnClassification = FALSE, ...)
 }
 \arguments{
-\item{data}{MultiWaveAnalysis object obtained with MultiWaveAnalysis function and
-preferably obtained a subset of its characteristics
+\item{data}{MultiWaveAnalysis object obtained with MultiWaveAnalysis function
+and preferably obtained a subset of its characteristics
 (\code{\link{StepDiscrim}}, \code{\link{StepDiscrimV}})}
 
 \item{labels}{Labeled vector that classify the observations.}
@@ -39,9 +39,9 @@ object. It is advisable to have selected a subset of all features
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 MWA <- MultiWaveAnalysis(ECGExample, "haar", features = c("var"))
-MWADiscrim <- StepDiscrim(MWA, c(rep(1, 5), rep(2, 5)), 5,
+MWADiscrim <- StepDiscrim(MWA, c(rep(1, 8), rep(2, 8)), 5,
                           features = c("var"))
-CM <- LOOCV(MWADiscrim, c(rep(1, 5), rep(2, 5)), "linear")
+CM <- LOOCV(MWADiscrim, c(rep(1, 8), rep(2, 8)), "linear")
 }
 
 }

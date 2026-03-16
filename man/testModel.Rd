@@ -37,15 +37,16 @@ classification result.
 \examples{
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-# The dataset has the first 5 elements of class 1
-# and the last 5 of class 2.
-labels <- c(rep(1, 5), rep(2, 5))
-MWA <- generateStepDiscrim(ECGExample, labels, "haar", maxvars = 5, features = c("var"))
-aux <- extractSubset(MWA, c(1, 2, 9, 10))
+# The dataset has the first 8 elements of class 1
+# and the last 8 of class 2.
+labels <- c(rep(1, 8), rep(2, 8))
+MWA <- generateStepDiscrim(ECGExample, labels, "haar", maxvars = 5,
+                           features = c("var"))
+aux <- extractSubset(MWA, c(1, 2, 15, 16))
 MWATest <- aux[[1]]
 MWATrain <- aux[[2]]
-ldaDiscriminant <- trainModel(MWATrain, labels[3:8], "linear")
-CM <- testModel(ldaDiscriminant, MWATest, labels[c(1, 2, 9, 10)])
+ldaDiscriminant <- trainModel(MWATrain, labels[3:14], "linear")
+CM <- testModel(ldaDiscriminant, MWATest, labels[c(1, 2, 15, 16)])
 }
 
 }

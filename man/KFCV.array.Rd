@@ -73,17 +73,17 @@ classification result.
 }
 \description{
 It generates and validates a discriminant model starting from the data. First
-, a MultiWaveAnalysis object is obtained according to the selected characteristics
-,filter and levels. Then, the most important features are selected using a
-stepwise discriminant that allows to select a maximum number of variables
-(maxvars) or a minimum enhancement step (VStep). Finally, the model is
-trained using the subset of features and validated using
+, a MultiWaveAnalysis object is obtained according to the selected
+characteristics ,filter and levels. Then, the most important features are
+selected using a stepwise discriminant that allows to select a maximum number
+of variables (maxvars) or a minimum enhancement step (VStep). Finally, the
+model is trained using the subset of features and validated using
 K-Fold Cross Validation (KFCV).
 }
 \examples{
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-labels <- c(rep(1, 5), rep(2, 5))
+labels <- c(rep(1, 8), rep(2, 8))
 CM <- KFCV(ECGExample, labels, "haar", "linear",
   maxvars = 5,
   features = c("Var"), returnClassification = FALSE

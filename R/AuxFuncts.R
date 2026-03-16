@@ -21,8 +21,9 @@ D3toD2 <- function(i, j, k, nRows, nCols, nPages) {
 
 #' Generate StepDiscrim from raw data
 #'
-#' This function allows to obtain in a single step the complete MultiWaveAnalysis
-#' and the selection of the most discriminating variables of the MultiWaveAnalysis.
+#' This function allows to obtain in a single step the complete
+#' MultiWaveAnalysis and the selection of the most discriminating variables of
+#' the MultiWaveAnalysis.
 #'
 #' @param series Sample from the population (dim x length x cases)
 #' @param labels Labeled vector that classify the observations
@@ -57,9 +58,9 @@ D3toD2 <- function(i, j, k, nRows, nCols, nPages) {
 #' @examples
 #' \donttest{
 #' load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-#' # The dataset has the first 5 elements of class 1
-#' # and the last 5 of class 2.
-#' labels <- c(rep(1, 5), rep(2, 5))
+#' # The dataset has the first 8 elements of class 1
+#' # and the last 8 of class 2.
+#' labels <- c(rep(1, 8), rep(2, 8))
 #' MWADiscrim <- generateStepDiscrim(ECGExample, labels, "haar",
 #'   features = c("Var"), maxvars = 5
 #' )
@@ -93,16 +94,16 @@ generateStepDiscrim <-
 
         if (length(dim(series)) != 3) {
             stop(
-                "It seems that a dimension is missing, in case your series contains
-         only one case, make sure that you have activated the option
-         \"drop = FALSE\" as in the following example
-         Series1 = Series2 [,,1, drop = FALSE]."
+                "It seems that a dimension is missing, in case your series
+                contains only one case, make sure that you have activated the
+                option \"drop = FALSE\" as in the following example
+                Series1 = Series2 [,,1, drop = FALSE]."
             )
         }
 
         if (length(labels) != dim(series)[3]) {
-            stop("The number of observations in the data and those provided in labels do
-         not match.")
+            stop("The number of observations in the data and those provided in
+            labels do not match.")
         }
 
         if (missing(maxvars) && missing(VStep)) {
@@ -114,7 +115,8 @@ generateStepDiscrim <-
 
         if (!missing(maxvars)) {
             if (!is.numeric(maxvars) || length(maxvars) != 1 || maxvars <= 0) {
-                stop("The argument \"maxvars\" must be an integer greater than 0")
+                stop("The argument \"maxvars\" must be an integer greater than
+                     0")
             }
         } else {
             if (!is.numeric(VStep) || length(VStep) != 1 || VStep <= 0) {
@@ -153,6 +155,10 @@ generateStepDiscrim <-
 #'        \code{\link{availableFeatures}}
 #' @param lev Wavelet decomposition level, by default is selected using the
 #'        "conservative" strategy. See \code{\link{chooseLevel}} function.
+#' @param trainSize allows you to select only a subset of the data. Increases
+#'        speed at the expense of accuracy of results.
+#' @param linear Results are generated for a linear model (lda),
+#' @param quadratic Results are generated for a quadratic model (qda)
 #'
 #' @return A list that each element contains:
 #'   * CM: confusion matrix with a particular configuration using LOOCV
@@ -168,11 +174,11 @@ generateStepDiscrim <-
 #' @examples
 #' \donttest{
 #' load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-#' # The dataset has the first 5 elements of class 1
-#' # and the last 5 of class 2.
-#' labels <- c(rep(1, 5), rep(2, 5))
+#' # The dataset has the first 8 elements of class 1
+#' # and the last 8 of class 2.
+#' labels <- c(rep(1, 8), rep(2, 8))
 #' result <- testFilters(ECGExample, labels, features=c("var","cor"),
-#'           filters= c("haar","d4"), maxvars = 3)
+#'           filters= c("haar","d4"), maxvars = 3, trainSize = 1)
 #' }
 #'
 #' @export
@@ -190,12 +196,17 @@ testFilters <- function(series,
                         maxvars,
                         filters = c("haar", "d4", "d6", "d8", "la8"),
                         features = c("Var", "Cor", "IQR", "PE", "DM"),
-                        lev = 0) {
+                        lev = 0,
+                        trainSize = 0.2,
+                        linear = TRUE,
+                        quadratic = TRUE) {
     anyMissing(c(series, labels, maxvars))
+    checkmate::assertFlag(linear)
+    checkmate::assertFlag(quadratic)
     if (length(filters) == 0) {
         stop(
-            "At least one filter must be provided. To see the available filters use
-          availableFilters()"
+            "At least one filter must be provided. To see the available filters
+            use availableFilters()"
         )
     }
 
@@ -216,23 +227,33 @@ testFilters <- function(series,
     }
 
     if (length(labels) != dim(series)[3]) {
-        stop("The number of observations in the data and those provided in labels do
-         not match.")
+        stop("The number of observations in the data and those provided in
+        labels do not match.")
     }
 
     data <- list()
     nFeatures <- length(features)
+    nCases <- dim(series)[3]
+    if (trainSize < 1) {
+        sample <- sample (1:nCases,
+                          size = nCases * trainSize,
+                          replace = FALSE)
+        sampledSeries <- series[, , sample]
+        sampledLabels <- labels[sample]
+    } else {
+        sampledSeries <- series
+        sampledLabels <- labels
+    }
 
     for (f in filters) {
-        MWA <- MultiWaveAnalysis(series, f)
+        MWA <- MultiWaveAnalysis(sampledSeries, f)
         for (i in seq_len(nFeatures)) {
             comFeatures <- combn(features, i)
-            listFeatures <- split(comFeatures,
-                                  rep(seq_len(ncol(
-                                      comFeatures
-                                  )), each = nrow(comFeatures)))
+            listFeatures <- split(comFeatures, rep(seq_len(ncol(
+                comFeatures
+            )), each = nrow(comFeatures)))
             for (cFeatures in listFeatures) {
-                aux <- StepDiscrimRaw_(MWA, labels, maxvars, cFeatures)
+                aux <- StepDiscrimRaw_(MWA, sampledLabels, maxvars, cFeatures)
                 Tr <- aux[[1]]
                 incl <- aux[[2]]
                 maxVar <- min(maxvars, length(incl))
@@ -258,31 +279,143 @@ testFilters <- function(series,
                         Filter = MWA$Filter
                     )
                     attr(MWAAux, "class") <- "MultiWaveAnalysis"
-                    aux <- LOOCV(MWAAux, labels, "linear", TRUE)
-                    data <- append(data, list(
-                        list(
-                            CM = aux[[1]],
-                            classification = aux[[2]],
-                            NVars = v,
-                            Method = "linear",
-                            filter = f,
-                            Features = cFeatures
-                        )
-                    ))
-                    aux <- LOOCV(MWAAux, labels, "quadratic", TRUE)
-                    data <- append(data, list(
-                        list(
-                            CM = aux[[1]],
-                            classification = aux[[2]],
-                            NVars = v,
-                            Method = "quadratic",
-                            filter = f,
-                            Features = cFeatures
-                        )
-                    ))
+                    if (linear) {
+                        aux <- LOOCV(MWAAux,
+                                     sampledLabels,
+                                     "linear",
+                                     returnClassification = TRUE)
+                        data <- append(data, list(
+                            list(
+                                CM = aux[[1]],
+                                classification = aux[[2]],
+                                NVars = v,
+                                Method = "linear",
+                                filter = f,
+                                Features = cFeatures
+                            )
+                        ))
+                    }
+                    if (quadratic) {
+                        aux <- LOOCV(MWAAux,
+                                     sampledLabels,
+                                     "quadratic",
+                                     returnClassification = TRUE)
+                        data <- append(data, list(
+                            list(
+                                CM = aux[[1]],
+                                classification = aux[[2]],
+                                NVars = v,
+                                Method = "quadratic",
+                                filter = f,
+                                Features = cFeatures
+                            )
+                        ))
+                    }
                 }
             }
         }
     }
     return(data)
 }
+
+#' filterParameters
+#'
+#' This function allows to filter the results obtained by the
+#' \code{\link{testFilters}} function according to the precision achieved.
+#'
+#' @param data Collection of parameter tests obtained with the
+#'             \code{\link{testFilters}} function.
+#' @param accuracy  Determines from which precision the elements will be
+#'                  selected. For example, a value of 0.9 will select all
+#'                   combinations with a precision equal to or greater than 0.9.
+#' @return The parameter combinations that have achieved an accuracy greater
+#' than or equal to that indicated in the accuracy parameter.
+#'
+#' @examples
+#' \donttest{
+#' load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
+#' # The dataset has the first 5 elements of class 1
+#' # and the last 5 of class 2.
+#' labels <- c(rep(1, 8), rep(2, 8))
+#' result <- testFilters(ECGExample, labels, features=c("var","cor"),
+#'           filters= c("haar","d4"), maxvars = 3, trainSize = 1)
+#' filterResult <- filterParameters(result, 0.9)
+#' }
+#'
+#' @export
+#' @seealso
+#' * \code{\link{testFilters}}
+#'
+#' @md
+
+filterParameters <- function(data, accuracy) {
+    Filter(function (x) {
+        val <- x$CM$overall["Accuracy"]
+        r = !is.null(val) && !is.na(val) && val >= accuracy
+    }, data)
+}
+
+mat_to_string <- function(mat, indent = 0) {
+    if (!is.matrix(mat)) {
+        mat <- matrix(mat, nrow = 1)
+    }
+
+    widths <- apply(mat, 2, function(x)
+        max(nchar(as.character(x))))
+    mat_formateada <- apply(mat, 2, function(x, w)
+        format(x, width = w, justify = "right"), w = widths)
+
+    if (!is.matrix(mat_formateada)) {
+        mat_formateada <- matrix(mat_formateada, nrow = 1)
+    }
+
+    mat_lines <- apply(mat_formateada, 1, paste, collapse = " ")
+
+    if (length(mat_lines) > 1) {
+        indent_str <- paste(rep("\t", indent), collapse = "")
+        mat_lines <- c(mat_lines[1], paste0(indent_str, mat_lines[-1]))
+    }
+
+    mat_string <- paste(mat_lines, collapse = "\n")
+
+    return(mat_string)
+}
+
+mgrinit <- function (cls) {
+    # set up so that each worker node will have a global variable myinfo
+    # that contains the thread ID and number of threads
+    setmyinfo <- function(i, n) {
+        assign("myinfo", list(id = i, nwrkrs = n), pos = tmpenv)
+    }
+    ncls <- length(cls)
+    parallel::clusterEvalQ(cls, tmpenv <- new.env())
+    parallel::clusterApply(cls, seq_len(ncls), setmyinfo, ncls)
+    parallel::clusterEvalQ(cls, myinfo <- get("myinfo", tmpenv))
+
+    parallel::clusterExport(cls, "getidxs", envir = loadNamespace("TSEAL"))
+}
+
+mgrmakevar <- function(cls, varname, nr, nc) {
+    matrix <- bigmemory::big.matrix(nrow = nr,
+                                    ncol = nc,
+                                    type = "double")
+    assign(varname, matrix, pos = parent.frame())
+    parallel::clusterExport(cls, "varname", envir = environment())
+    desc <- bigmemory::describe(matrix)
+    parallel::clusterExport(cls, "desc", envir = environment())
+    parallel::clusterEvalQ(cls, matrix <- bigmemory::attach.big.matrix(desc))
+    parallel::clusterEvalQ(cls, assign(varname, matrix))
+}
+
+getidxs <- function(m) {
+    parallel::splitIndices(m, myinfo$nwrkrs)[[myinfo$id]]
+}
+
+#' @importFrom parallel stopCluster
+#' @noRd
+stoprdsm <- function(cls) {
+    stopCluster(cls)
+    rm(cls)
+}
+
+utils::globalVariables("myinfo")

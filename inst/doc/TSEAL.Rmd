@@ -1,0 +1,149 @@
+---
+title: "TSEAL"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{TSEAL}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+set.seed(123)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  cache = FALSE,
+  autodep = TRUE,
+  comment = "#>"
+)
+```
+
+TSEAL is a library designed for the classification of multivariate time series. That is, time series where we have more than one variable for each point in time. In these time series, both the individual behavior of each variable and the interactions between them are important.
+A typical example would be meteorological data, where pressure and temperature values can be informative separately, but the relationship between them may provide more insightful patterns.
+To illustrate the use of this package, we will rely on electrocardiogram (ECG) data. Specifically, we will use a reduced dataset from the [PTB Diagnostic ECG Database](https://www.physionet.org/content/ptbdb/1.0.0/). This dataset contains 15 input channels (variables) with 8,192 measurements, and a total of 549 samples from 290 different subjects with various cardiac pathologies. In order to speed up the calculations, we will use only 18 of the 549 samples, where the first 8 correspond to healthy patients and the last 8 to patients who have suffered a myocardial infarction.
+The first step is to load the library, the dataset to be used, and a vector containing the associated labels. Remember that the first 8 are from one class and the last 8 from the other.
+
+```{r setup}
+library(caret)
+library(TSEAL)
+load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
+labels <- c(rep(1,8),rep(2,8))
+```
+
+Once the data has been loaded, we can begin the analysis. However, it is important to note that the method is highly sensitive to the selection of classifier parameters. For this reason, the package includes a function that performs an exhaustive brute-force search over all possible parameters combinations, allowing the most suitable configuration to be identified.
+
+```{r eval=FALSE}
+parameters <- testFilters(ECGExample, labels, maxvars = 2, trainSize = 1.0)
+```
+Note that in this case we specify a training size of 100% due to the limited amount of data. However, in real scenarios it is necessary to balance training size, which increases the execution time, and classification accuracy.
+
+Since this process may require a substantial amount of time (20-30 minutes), we will load precomputed results. As shown, the output contains a large number of possible parameter combinations. To reduce them, we will select only those achieving an accuracy equal to 100%.
+
+```{r echo=TRUE}
+load(system.file("extdata/parameters.rda",package = "TSEAL"))
+length(parameters)
+filteredParameters <- filterParameters(parameters, 1)
+length(filteredParameters)
+
+```
+As can be seen, we have obtained a total of 240 parameter combinations achieving 100% accuracy. However, some of these combinations may be more convenient than others. For example, let us select those using the fewest features and a linear discriminant.
+
+
+```{r echo=TRUE}
+filteredParameters <- Filter(function(x) x$Method =="linear",
+                             filteredParameters)
+min_feature_elements <- filteredParameters[
+  (feature_lengths <- vapply(
+    filteredParameters,
+    function(x) length(x$Features),
+    integer(1)
+  )) == min(feature_lengths)
+]
+length(min_feature_elements)
+table(sapply(min_feature_elements,`[[`,"Features"))
+```
+As shown, we have a total of 15 combinations with a single feature, linear discriminant, and 100% accuracy due to the limited data, but normally we would find two or three similar combinations with more data. The table also shows that the most relevant features are Cor, DM, and PE. Therefore, we could conclude that these are the most relevant features for classifying between healthy subjects and myocardial infarction cases (taking into account that we are using a small subset of the data).
+
+To continue with the example, let's select the DM an IQR feature (To have both univariate and multivariate variables) and the “d6” filter.
+
+Once the desired combination of parameters has been selected, the next step is to build a classifier using all available data. This process can be done either step by step or all at once using the functions designed for this purpose. In this case, we will choose the step-by-step option as it is more illustrative. In addition, we create train and test subsets to simulate the classification of new observations using a previously trained model.
+
+```{r}
+sample <- sample(0:length(labels),2)
+training <- ECGExample[,,-sample]
+labelsTraining <- labels[-sample]
+test <- ECGExample[,,sample]
+labelsTest <- labels[sample]
+```
+
+The first step is to extract the different variables used by the classifier from the original data.
+
+```{r MWA, eval=FALSE}
+MWA <- MultiWaveAnalysis(series = training, f = "d6", features = c("IQR","DM"))
+```
+```{r, echo=TRUE}
+MWA
+```
+
+From the output, we observe that 135 variables have been generated from the IQR feature and 945 from the DM feature. This difference is due to the fact that IQR is a univariate feature (it considers each signal independently), while DM is multivariate relying on pairwise relationships between two signals. In any case, the total number of variables (1080) is too large and would negatively affect classifier performance. To address this, a much smaller number of characteristics will be selected using a stepwise discriminant analysis. Based on the previously obtained parameters, we restrict the selection to only two variables with the highest discriminant power.
+
+```{r MWAstepMax, eval=FALSE}
+MWAStep <- StepDiscrim(MWA = MWA, labels = labelsTraining, maxvars = 2,
+                       features = c("IQR","DM"))
+
+```
+```{r , echo=TRUE}
+MWAStep
+```
+If we prefer not to predefine a maximum number of variables, we may instead specify a minimal improvement threshold.  In this way, if the addition of a new variable does not reach the specified improvement threshold, the process is terminated.
+
+```{r MWAstepTresh, eval=FALSE}
+MWAStepV <- StepDiscrimV(MWA = MWA, labels = labelsTraining, VStep = 2.1,
+                         features = c("IQR","DM"))
+```
+```{r , echo=TRUE}
+MWAStepV
+```
+
+In this example, only one variable from the DM feature has been selected.
+
+The output generated also shows both the number of selected variables (e.g., 119 and 223 for DM) in the “Variables selected by the selection process” section, and the corresponding source signals in the section “Signals chosen by the classifier”. This facilitates interpretability, allowing us to infer, for instance, that the interaction between electrodes 2 and 4 and the interquartile range of electrode 3 are important for detecting myocardial infarction.
+
+Once the most discriminative variables have been selected, we can evaluate the classifier’s accuracy using all available data, using leave-one-out cross-validation (LOOCV) validation method.
+
+
+```{r LOOCV, eval=FALSE}
+LOOCV <- LOOCV(MWAStep, labels = labelsTraining, method = "linear")
+```
+```{r , echo=TRUE}
+LOOCV
+```
+
+As shown, the classifier achieves 100% accuracy. This entire process could also have been carried out in a single call using the same method, but starting from the raw data.
+
+```{r LOOCV array, eval=FALSE}
+LOOCV_raw <- LOOCV(training, labels = labelsTraining, f = "d6",features = c("IQR","DM"),
+      maxvars = 2, method = "linear")
+```
+```{r , echo=TRUE}
+LOOCV_raw
+```
+
+Next, if the results are satisfactory, we can train a final classifier. As in the case of LOOCV, this can be done directly from the raw data.
+
+```{r classifier, echo=TRUE}
+classifier <- trainModel(MWAStep, labels = labelsTraining, method = "linear")
+```
+```{r classifierRaw, eval=FALSE}
+calssifierRaw <- trainModel(training, labels = labelsTraining,
+                            method = "linear", f = "d6",
+                            features = c("IQR","DM"), maxvars = 2 )
+```
+
+Once the classifier has been trained, new observations can be classified as follows:
+
+```{r classify, echo=TRUE}
+classification <- classify(test, model = classifier)
+CM <- confusionMatrix(as.factor(classification), as.factor(labelsTest))
+CM
+```
+

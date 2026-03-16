@@ -9,13 +9,13 @@ SameDiscrim(MWA, MWADiscrim)
 \arguments{
 \item{MWA}{MultiWaveAnalysis object on which variables are to be selected.}
 
-\item{MWADiscrim}{MultiWaveAnalysis object on which certain variables have been
-previously selected, using \code{\link{StepDiscrim}} or
+\item{MWADiscrim}{MultiWaveAnalysis object on which certain variables have
+been previously selected, using \code{\link{StepDiscrim}} or
 \code{\link{StepDiscrimV}}}
 }
 \value{
-An object of class MultiWaveAnalysis with the same variables selected as in the
-MWADiscrim object.
+An object of class MultiWaveAnalysis with the same variables selected
+as in the MWADiscrim object.
 }
 \description{
 Allows to perform the same variable selection in a new MWA object starting
@@ -26,10 +26,10 @@ the parameters of the MWA and of the selection are the same).
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 # We simulate that the second series has been obtained after
-Series1 <- ECGExample[, , 1:9]
-Series2 <- ECGExample[, , 10, drop = FALSE]
+Series1 <- ECGExample[, , 1:15]
+Series2 <- ECGExample[, , 16, drop = FALSE]
 MWA <- MultiWaveAnalysis(Series1, "haar", features = c("var"))
-MWADiscrim <- StepDiscrim(MWA, c(rep(1, 5), rep(2, 4)), 5,
+MWADiscrim <- StepDiscrim(MWA, c(rep(1, 8), rep(2, 7)), 5,
   features = c("var")
 )
 

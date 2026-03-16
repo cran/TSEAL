@@ -66,8 +66,8 @@ the selected discriminant model is trained with the subset obtained.
 \examples{
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-# The dataset has the first 5 elements of class 1 and the last 5 of class 2.
-labels <- c(rep(1, 5), rep(2, 5))
+# The dataset has the first 8 elements of class 1 and the last 8 of class 2.
+labels <- c(rep(1, 8), rep(2, 8))
 model <- trainModel(ECGExample, labels, "d6", "linear",
   maxvars = 5, features = c("Var")
 )

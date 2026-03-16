@@ -3,6 +3,24 @@
 # Created by: ivan
 # Created on: 8/4/21
 
+
+signalFromVariable <- local({
+    f_uni <- function(varNum, NLevels, NSignals = NULL)
+        (varNum %/% NLevels) + 1
+
+    f_bi <- function(varNum, NLevels, NSignals)
+        combn(seq_len(NSignals), 2)[, (varNum %/% NLevels) + 1]
+
+    list(
+        var = f_uni,
+        cor = f_bi,
+        iqr = f_uni,
+        pe  = f_uni,
+        dm  = f_bi
+    )
+})
+
+
 #' Generate a MultiWave analysis
 #'
 #' Generates a multivariate analysis by calculating a series of features from
@@ -46,11 +64,11 @@
 #' * \code{\link{availableFeatures}}
 #'
 #' @export
+#' @md
 #'
 #' @importFrom bigmemory as.matrix GetMatrixSize
 #' @importFrom waveslim modwt wave.variance wave.correlation wave.filter
 #' @importFrom parallel makeCluster clusterExport clusterEvalQ detectCores
-#' @importFrom pryr object_size
 #' @importFrom stats sd
 #' @importFrom utils combn
 #' @importFrom checkmate anyMissing asCount
@@ -257,13 +275,15 @@ MultiWaveAnalysis <- function(series,
                 if (HCor || HDM) {
                     for (k in seq_len(NumberNbK)) {
                         if (HCor) {
-                            WCOR <- suppressWarnings(waveslim::wave.correlation
-                                                     (WJ[[NbK[1, k]]], WJ[[NbK[2, k]]], nr1))
+                            WCOR <- suppressWarnings(
+                                waveslim::wave.correlation
+                                    (WJ[[NbK[1, k]]], WJ[[NbK[2, k]]], nr1))
                             Cor[((k - 1) * lev + 1):(k * lev), i] <-
                                 WCOR[seq_len(lev), 1]
                         }
                         if (HDM) {
-                            WDM <- computeDMeasure(WJ[[NbK[1, k]]], WJ[[NbK[2, k]]])
+                            WDM <- computeDMeasure(
+                                WJ[[NbK[1, k]]], WJ[[NbK[2, k]]])
                             DM[seq((k - 1) * lev + 1, k * lev), i] <-
                                 WDM
                         }
@@ -271,8 +291,7 @@ MultiWaveAnalysis <- function(series,
                 }
             }
         })
-    },
-    finally = stoprdsm(c))
+    }, finally = stoprdsm(c))
 
     aVar <- as.matrix(Var)
     aCor <- as.matrix(Cor)
@@ -288,34 +307,27 @@ MultiWaveAnalysis <- function(series,
         aPE <- matrix(aPE)
     }
 
-    x <- list(
-        Features = list(
-            Var = aVar,
-            Cor = aCor,
-            IQR = aIQR,
-            DM = aDM,
-            PE = aPE
-        ),
-        StepSelection = list(
-            Var = NA,
-            Cor = NA,
-            IQR = NA,
-            DM = NA,
-            PE = NA
-        ),
-        Observations = nc1,
+    MWA <- WaveAnalysis(
+        aVar,
+        aCor,
+        aIQR,
+        aDM,
+        aPE,
+        observations = nc1,
+        signals = nv1,
         NLevels = lev,
-        Filter = f
+        filter = f,
     )
-    attr(x, "class") <- "MultiWaveAnalysis"
-    return(x)
+
+    return(MWA)
 }
 
 #' Select the DWT level of decomposition based on wavelet filter, data series
 #'  length and a user choice
 #'
 #' @param choice Valid values:
-#'  * "Conservative" : \eqn{J < log_2 ( N / (L - 1) + 1)}{J < log2(N / (L - 1) + 1)}
+#'  * "Conservative" :
+#'  \eqn{J < log_2 ( N / (L - 1) + 1)}{J < log2(N / (L - 1) + 1)}
 #'  * "Max" : \eqn{J \leq log_2(N)}{J <= log2(N) }
 #'  * "Supermax" : \eqn{ J \leq log_2(1.5 * N)}{J <= log2(1.5 * N)}
 #' @param filter Wavelet transform filter name. To see the available filters use
@@ -325,6 +337,7 @@ MultiWaveAnalysis <- function(series,
 #' @return Number of level of decomposition based in selection criteria
 #' @references Percival, D. B. and A. T. Walden (2000) Wavelet Methods for
 #'   Time Series Analysis. Cambridge: Cambridge University Press.
+#' @md
 #'
 #' @examples
 #' lev <- chooseLevel("conservative", "haar", 8)
@@ -358,54 +371,6 @@ chooseLevel <- function(choice, filter, N) {
     )
 }
 
-#' Extract observations from a MultiWaveAnalysis
-#'
-#' This function permits to extract certain observations from a MultiWaveAnalysis
-#'
-#' @param MWA MultiWaveAnalysis from which the desired observations will be extracted
-#' @param indices Indices that will indicate which observations will be
-#'        extracted
-#'
-#'
-#' @return A list with two elements:
-#'  * MWA: The MultiWaveAnalysis provided minus the extracted observations.
-#'  * MWAExtracted: A new MultiWaveAnalysis with the extracted observations
-#' @export
-#'
-#' @examples
-#' load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-#' MWA <- MultiWaveAnalysis(ECGExample, "haar", features = "Var")
-#' aux <- extractSubset(MWA, c(1, 2, 3))
-#' MWATrain <- aux[[1]]
-#' MWATest <- aux[[2]]
-#' @md
-extractSubset <- function(MWA, indices) {
-    if (missing(MWA)) {
-        stop("The argument \"MWA\" must be provided.")
-    }
-    if (missing(indices)) {
-        stop("The argument \"indices\" must be provided.")
-    }
-
-    n <- length(indices)
-
-    MWA1 <- MWA
-    MWA1$Observations <- n
-
-    MWA2 <- MWA
-    MWA2$Observations <- MWA2$Observations - n
-
-    for (feature in names(MWA$Features)) {
-        if (!(is.na(MWA$Features[[feature]][1]))) {
-            MWA1$Features[[feature]] <-
-                MWA1$Features[[feature]][, indices, drop = FALSE]
-
-            MWA2$Features[[feature]] <-
-                MWA2$Features[[feature]][, -indices, drop = FALSE]
-        }
-    }
-    return(list(MWA1, MWA2))
-}
 
 #' availableFeatures
 #'
@@ -425,6 +390,7 @@ extractSubset <- function(MWA, indices) {
 #' * \code{\link{StepDiscrimV}}
 #'
 #' @export
+#' @md
 availableFeatures <- function() {
     names <- c(
         "Variance",
@@ -433,7 +399,7 @@ availableFeatures <- function() {
         "Permutation Entropy",
         "Hoefflin s D measure"
     )
-    keys <- c("Var", "Cor", "IQR", "PE", "D")
+    keys <- c("Var", "Cor", "IQR", "PE", "DM")
     res <- data.frame(names, keys)
     return(res)
 }
@@ -451,6 +417,7 @@ availableFeatures <- function() {
 #' * \code{\link{MultiWaveAnalysis}}
 #'
 #' @export
+#' @md
 availableFilters <- function() {
     filters <- c(
         "harr",
@@ -492,10 +459,10 @@ computeIQR <- function(X) {
 #' @noRd
 computePermutationEntropy <- function(X) {
     aux <- head(X, -1)
-    return(unlist(lapply(aux,
-                         function(x) {
-                             statcomp::permutation_entropy(statcomp::ordinal_pattern_distribution(x, 6))
-                         })))
+    return(unlist(lapply(aux, function(x) {
+        statcomp::permutation_entropy(
+            statcomp::ordinal_pattern_distribution(x, 6))
+    })))
 }
 
 #' @importFrom utils head
@@ -507,81 +474,6 @@ computeDMeasure <- function(X, Y) {
     return(mapply(function(x, y) {
         wdm::wdm(x, y, "hoeffding")
     }, X, Y))
-}
-
-#' @export
-print.MultiWaveAnalysis <- function(x, ...) {
-    summary(x)
-}
-
-
-
-#' @export
-summary.MultiWaveAnalysis <- function(object, ...) {
-    MWA <- object
-    InitStr <- paste(
-        "MultiWave Analysis Object:",
-        "\n\tNumber of Observations: ",
-        MWA$Observations,
-        "\n\tNumber of decomposing levels: ",
-        MWA$NLevels,
-        "\n\tFilter used: ",
-        MWA$Filter,
-        sep = ""
-    )
-
-
-    FeaturesStr <- paste("\tStored Features per observation:")
-    for (feature in names(MWA$Features)) {
-        if (!all(is.na(MWA$Features[[feature]]))) {
-            NFeature <- dim(MWA$Features[[feature]])[1]
-            FeaturesStr <-
-                paste(FeaturesStr,
-                      paste("\n\t\t-", feature, " : ", NFeature))
-        }
-    }
-
-    SelectionStr <- paste("")
-    if (all(is.na(MWA$StepSelection))) {
-        SelectionStr <-
-            paste(
-                "\tThis MultiWaveAnalysis object has not gone",
-                "through the variable selection process."
-            )
-    } else {
-        SelectionStr <-
-            paste(
-                "\tVariables selected by the selection process",
-                "\n\t(Note that they refer to the index before being",
-                "filtered):"
-            )
-
-        for (feature in names(MWA$StepSelection)) {
-            if (!all(is.na(MWA$StepSelection[[feature]]))) {
-                selected <- MWA$StepSelection[[feature]]
-                SelectionStr <- paste(SelectionStr,
-                                      paste(
-                                          "\n\t\t-",
-                                          feature,
-                                          " : ",
-                                          paste(selected, collapse = ", ")
-                                      ))
-            }
-        }
-    }
-
-    cat(paste(InitStr, FeaturesStr, SelectionStr, sep = "\n"))
-}
-
-values <- function(MWA) {
-    stopifnot(is(MWA, "MultiWaveAnalysis"))
-    values <- matrix(0, nrow = 0, ncol = MWA$Observations)
-    for (feature in MWA$Features) {
-        if (!(is.na(feature[1]))) {
-            values <- rbind(values, as.matrix(feature))
-        }
-    }
-    return(values)
 }
 
 getAllFeatures <- function() {

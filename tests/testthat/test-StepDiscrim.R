@@ -1,8 +1,4 @@
 test_that("StepDiscrim", {
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
-    MWA <- MultiWaveAnalysis(testExperiments, "haar", nCores = 2)
     MWA2 <-
         StepDiscrim(MWA, MedicalClasification, 1, c("Var", "Cor"), nCores = 2)
 
@@ -11,10 +7,6 @@ test_that("StepDiscrim", {
 })
 
 test_that("StepDiscrimVar", {
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
-    MWA <- MultiWaveAnalysis(testExperiments, "haar", nCores = 2)
     MWA2 <-
         StepDiscrim(MWA, MedicalClasification, 2, c("Var"), nCores = 2)
 
@@ -24,10 +16,6 @@ test_that("StepDiscrimVar", {
 })
 
 test_that("StepDiscrimCor", {
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
-    MWA <- MultiWaveAnalysis(testExperiments, "haar", nCores = 2)
     MWA2 <-
         StepDiscrim(MWA, MedicalClasification, 1, c("Cor"), nCores = 2)
 
@@ -36,10 +24,6 @@ test_that("StepDiscrimCor", {
 })
 
 test_that("StepDiscrim", {
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
-    MWA <- MultiWaveAnalysis(testExperiments, "haar", nCores = 2)
     MWADiscrim <- StepDiscrim(MWA, MedicalClasification, maxvars = 3)
     MWADiscrimV <- StepDiscrimV(MWA, MedicalClasification, VStep = 1)
 
@@ -47,11 +31,7 @@ test_that("StepDiscrim", {
 })
 
 test_that("SameDiscrim", {
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
-    MWA <- MultiWaveAnalysis(testExperiments, "haar", nCores = 2)
-    MWADiscrim <- StepDiscrim(MWA, MedicalClasification, maxvars = 3)
+    MWADiscrim <- StepDiscrim(MWA, MedicalClasification, maxvars = 2)
     MWASameDiscrim <- SameDiscrim(MWA, MWADiscrim)
 
     expect_equal(MWADiscrim, MWASameDiscrim)

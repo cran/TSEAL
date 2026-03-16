@@ -54,7 +54,7 @@ Based on StepDiscrim of R.E. Strauss
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 MWA <- MultiWaveAnalysis(ECGExample, "haar", features = c("var"))
 MWADiscrim <- StepDiscrimV(
-  MWA, c(rep(1, 5), rep(2, 5)), 0.1,
+  MWA, c(rep(1, 8), rep(2, 8)), 0.1,
   c("Var")
 )
 }

@@ -10,7 +10,10 @@ testFilters(
   maxvars,
   filters = c("haar", "d4", "d6", "d8", "la8"),
   features = c("Var", "Cor", "IQR", "PE", "DM"),
-  lev = 0
+  lev = 0,
+  trainSize = 0.2,
+  linear = TRUE,
+  quadratic = TRUE
 )
 }
 \arguments{
@@ -30,6 +33,13 @@ classification process. To see the available features see
 
 \item{lev}{Wavelet decomposition level, by default is selected using the
 "conservative" strategy. See \code{\link{chooseLevel}} function.}
+
+\item{trainSize}{allows you to select only a subset of the data. Increases
+speed at the expense of accuracy of results.}
+
+\item{linear}{Results are generated for a linear model (lda),}
+
+\item{quadratic}{Results are generated for a quadratic model (qda)}
 }
 \value{
 A list that each element contains:
@@ -55,11 +65,11 @@ quadratic discriminant.
 \examples{
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-# The dataset has the first 5 elements of class 1
-# and the last 5 of class 2.
-labels <- c(rep(1, 5), rep(2, 5))
+# The dataset has the first 8 elements of class 1
+# and the last 8 of class 2.
+labels <- c(rep(1, 8), rep(2, 8))
 result <- testFilters(ECGExample, labels, features=c("var","cor"),
-          filters= c("haar","d4"), maxvars = 3)
+          filters= c("haar","d4"), maxvars = 3, trainSize = 1)
 }
 
 }

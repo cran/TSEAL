@@ -50,15 +50,16 @@ A MultiWaveAnalysis with the most discriminant variables based on the
 features indicated.
 }
 \description{
-This function allows to obtain in a single step the complete MultiWaveAnalysis
-and the selection of the most discriminating variables of the MultiWaveAnalysis.
+This function allows to obtain in a single step the complete
+MultiWaveAnalysis and the selection of the most discriminating variables of
+the MultiWaveAnalysis.
 }
 \examples{
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-# The dataset has the first 5 elements of class 1
-# and the last 5 of class 2.
-labels <- c(rep(1, 5), rep(2, 5))
+# The dataset has the first 8 elements of class 1
+# and the last 8 of class 2.
+labels <- c(rep(1, 8), rep(2, 8))
 MWADiscrim <- generateStepDiscrim(ECGExample, labels, "haar",
   features = c("Var"), maxvars = 5
 )

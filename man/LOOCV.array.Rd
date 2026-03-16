@@ -79,7 +79,7 @@ Leave-One-Out Cross Validation (LOOCV).
 \examples{
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
-labels <- c(rep(1, 5), rep(2, 5))
+labels <- c(rep(1, 8), rep(2, 8))
 CM <- LOOCV(ECGExample, labels, "haar", "linear",
   maxvars = 5,
   features = c("Var"), returnClassification = FALSE

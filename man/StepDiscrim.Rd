@@ -28,7 +28,8 @@ function, by default it uses all but one of the system cores. Must be
 a positive integer, where 0 corresponds to the default behavior}
 }
 \value{
-A MultiWaveAnalysis object with the maxvars most discriminant variables.
+A MultiWaveAnalysis object with the maxvars most discriminant
+variables.
 This object contains:
 * Features: A list with the initial computed features
 * StepSelection: The maxvars most discriminant variables
@@ -50,7 +51,7 @@ Based on StepDiscrim of R.E. Strauss
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 MWA <- MultiWaveAnalysis(ECGExample, "haar", features = c("var"))
 MWADiscrim <- StepDiscrim(
-  MWA, c(rep(1, 5), rep(2, 5)), 5,
+  MWA, c(rep(1, 8), rep(2, 8)), 5,
   c("Var")
 )
 }

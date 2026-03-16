@@ -7,7 +7,8 @@
 \method{trainModel}{MultiWaveAnalysis}(data, labels, method, ...)
 }
 \arguments{
-\item{data}{A MultiWaveAnalysis object obtained with MultiWaveAnalysis function}
+\item{data}{A MultiWaveAnalysis object obtained with MultiWaveAnalysis
+function}
 
 \item{labels}{Labeled vector that classify the observations.}
 
@@ -27,10 +28,10 @@ Generates a discriminant model from an already generated "MultiWaveAnalysis".
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 MWA <- MultiWaveAnalysis(ECGExample, "d6", features = c("Var"))
-MWADiscrim <- StepDiscrim(MWA, c(rep(1, 5), rep(2, 5)), 5,
+MWADiscrim <- StepDiscrim(MWA, c(rep(1, 8), rep(2, 8)), 5,
   features = c("Var")
 )
-model <- trainModel(MWADiscrim, c(rep(1, 5), rep(2, 5)), "linear")
+model <- trainModel(MWADiscrim, c(rep(1, 8), rep(2, 8)), "linear")
 }
 
 }

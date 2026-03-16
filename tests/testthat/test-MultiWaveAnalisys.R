@@ -2,10 +2,6 @@ test_that("test MultiWaveAnalisysVarCOR", {
     NVar <- 30
     NCor <- 135
 
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
-    MWA <- MultiWaveAnalysis(testExperiments, "haar")
     m <- read.csv("../Results/MWA.csv", header = FALSE)
     expect_equal(
         rbind(MWA$Features$Var, MWA$Features$Cor),
@@ -21,11 +17,6 @@ test_that("test MultiWaveAnalisysCor", {
     m <- read.csv("../Results/MWA.csv", header = FALSE)
     m <- m[31:(30 + NCor), ] # remove the correlations
 
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
-    MWA <- MultiWaveAnalysis(testExperiments, "haar")
-
     expect_equal(MWA$Features$Cor,
                  as.matrix(m),
                  tolerance = 0.01,
@@ -38,11 +29,6 @@ test_that("test MultiWaveAnalisysVar", {
     m <- read.csv("../Results/MWA.csv", header = FALSE)
     m <- m[1:NVar, ] # remove the correlations
 
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
-    MWA <- MultiWaveAnalysis(testExperiments, "haar")
-
     expect_equal(MWA$Features$Var,
                  as.matrix(m),
                  tolerance = 0.01,
@@ -50,8 +36,6 @@ test_that("test MultiWaveAnalisysVar", {
 })
 
 test_that("test MultiWaveAnalisys Input errors", {
-    testExperiments <- readRDS("../testExperiments.rds")
-
     expect_error(MultiWaveAnalysis(f = "haar"))
     expect_error(MultiWaveAnalysis(testExperiments))
     expect_error(MultiWaveAnalysis(testExperiments, f = "haar", features = c()))
@@ -75,9 +59,6 @@ test_that("test MultiWaveAnalisys Input errors", {
 })
 
 test_that("MultiWaveAnalisys one case", {
-    testExperiments <- readRDS("../testExperiments.rds")
-    MedicalClasification <- c(1, 1, 2, 2)
-
     oneData <- testExperiments[, , 1, drop = FALSE]
     MWA <-
         MultiWaveAnalysis(oneData, f = "haar", features = c("IQR"))

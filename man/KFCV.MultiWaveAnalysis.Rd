@@ -7,8 +7,8 @@
 \method{KFCV}{MultiWaveAnalysis}(data, labels, method, k = 5L, returnClassification = FALSE, ...)
 }
 \arguments{
-\item{data}{MultiWaveAnalysis (MWA) object obtained with MultiWaveAnalysis and
-preferably obtained a subset of its characteristics
+\item{data}{MultiWaveAnalysis (MWA) object obtained with MultiWaveAnalysis
+and preferably obtained a subset of its characteristics
 (\code{\link{StepDiscrim}},\code{\link{StepDiscrimV}})}
 
 \item{labels}{labeled vector that classify the observations.}
@@ -42,9 +42,9 @@ group will have nobs mod k observations.
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 MWA <- MultiWaveAnalysis(ECGExample, "haar", features = c("var"))
-MWADiscrim <- StepDiscrim(MWA, c(rep(1, 5), rep(2, 5)), 5,
+MWADiscrim <- StepDiscrim(MWA, c(rep(1, 8), rep(2, 8)), 5,
               features = c("var"))
-CM <- KFCV(MWADiscrim, c(rep(1, 5), rep(2, 5)), "linear", 5,
+CM <- KFCV(MWADiscrim, c(rep(1, 8), rep(2, 8)), "linear", 5,
   returnClassification = FALSE
 )
 }

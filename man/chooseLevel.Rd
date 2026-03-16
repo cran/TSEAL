@@ -10,7 +10,8 @@ chooseLevel(choice, filter, N)
 \arguments{
 \item{choice}{Valid values:
 \itemize{
-\item "Conservative" : \eqn{J < log_2 ( N / (L - 1) + 1)}{J < log2(N / (L - 1) + 1)}
+\item "Conservative" :
+\eqn{J < log_2 ( N / (L - 1) + 1)}{J < log2(N / (L - 1) + 1)}
 \item "Max" : \eqn{J \leq log_2(N)}{J <= log2(N) }
 \item "Supermax" : \eqn{ J \leq log_2(1.5 * N)}{J <= log2(1.5 * N)}
 }}

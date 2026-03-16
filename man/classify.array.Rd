@@ -25,14 +25,14 @@ function).
 \donttest{
 load(system.file("extdata/ECGExample.rda",package = "TSEAL"))
 # We simulate that the second series has been obtained after
-Series1 <- ECGExample[, , 1:9]
-Series2 <- ECGExample[, , 10, drop = FALSE]
+Series1 <- ECGExample[, , 1:15]
+Series2 <- ECGExample[, , 16, drop = FALSE]
 
 # Training a discriminant model
 MWA <- MultiWaveAnalysis(Series1, "haar", features = c("var"))
-MWADiscrim <- StepDiscrim(MWA, c(rep(1, 5), rep(2, 4)), maxvars = 5,
+MWADiscrim <- StepDiscrim(MWA, c(rep(1, 8), rep(2, 7)), maxvars = 5,
                           features = c("var"))
-model <- trainModel(MWADiscrim, c(rep(1, 5), rep(2, 4)), "linear")
+model <- trainModel(MWADiscrim, c(rep(1, 8), rep(2, 7)), "linear")
 
 # Using the discriminant trained on new data
 prediction <- classify(Series2, model)
