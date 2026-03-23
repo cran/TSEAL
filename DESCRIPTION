@@ -1,7 +1,7 @@
 Type: Package
 Package: TSEAL
 Title: Time Series Analysis Library
-Version: 0.1.4
+Version: 0.1.5
 Authors@R: 
     person("Iván", "Velasco", , "ivan.velasco@urjc.es", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-2314-5670"))
@@ -29,9 +29,9 @@ Language: en-US
 RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2026-03-16 12:31:29 UTC; ivan_
+Packaged: 2026-03-20 11:48:48 UTC; ivan_
 Author: Iván Velasco [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0002-2314-5670>)
 Maintainer: Iván Velasco <ivan.velasco@urjc.es>
 Repository: CRAN
-Date/Publication: 2026-03-16 15:20:09 UTC
+Date/Publication: 2026-03-23 12:20:07 UTC

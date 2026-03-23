@@ -220,8 +220,7 @@ LOOCV.array <-
         method <- tolower(method)
         features <- tolower(features)
 
-        MWA <- generateStepDiscrim(series, labels, f, maxvars, VStep, lev,
-                                   features, nCores)
+        MWA <- generateStepDiscrim(series, labels, f, maxvars, VStep, lev, features, nCores)
         return(LOOCV(MWA, labels, method, returnClassification))
     }
 
@@ -317,7 +316,13 @@ LOOCV.MultiWaveAnalysis <- function(data,
             return(NULL)
         }
     }
-    CM <- confusionMatrix(as.factor(class), as.factor(labels))
+
+    CM <- tryCatch(
+        confusionMatrix(as.factor(class), as.factor(labels)),
+        error = function(e) {
+            return(NULL)
+        }
+    )
 
     if (returnClassification) {
         return(list("CM" = CM, "classification" = class))
@@ -482,8 +487,7 @@ KFCV.array <-
         features <- tolower(features)
 
         MWA <-
-            generateStepDiscrim(series, labels, f, maxvars, VStep, lev,
-                                features, nCores)
+            generateStepDiscrim(series, labels, f, maxvars, VStep, lev, features, nCores)
         return(KFCV(MWA, labels, method, k, returnClassification))
     }
 
@@ -741,8 +745,7 @@ trainModel.array <-
         method <- tolower(method)
         features <- tolower(features)
 
-        MWA <- generateStepDiscrim(series, labels, f, maxvars, VStep, lev,
-                                features, nCores)
+        MWA <- generateStepDiscrim(series, labels, f, maxvars, VStep, lev, features, nCores)
         return(trainModel(MWA, labels, method))
     }
 #' Generates a discriminant model from an already generated "MultiWaveAnalysis".
@@ -815,7 +818,13 @@ trainModel.MultiWaveAnalysis <- function(data, labels, method, ...) {
             }
         )
     } else if (method == "quadratic") {
-        model <- qda(t(values), labels)
+        model <- tryCatch(
+            qda(t(values), labels) ,
+            error = function(e) {
+                warning(e)
+                return(NULL)
+            }
+        )
     } else {
         stop("Method", as.character(method), "not supported")
     }
